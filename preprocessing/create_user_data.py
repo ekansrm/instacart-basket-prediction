@@ -41,12 +41,22 @@ def parse_user(x):
 
 if __name__ == '__main__':
     orders = pd.read_csv('../data/raw/orders.csv')
+    # too much data, my machine cant handle that
+    user_list = orders['user_id'].drop_duplicates().sample(n=1000)
+    orders = orders[orders['user_id'].isin(user_list)]
+    print 'orders', orders.shape
+
     prior_products = pd.read_csv('../data/raw/order_products__prior.csv')
     train_products = pd.read_csv('../data/raw/order_products__train.csv')
     order_products = pd.concat([prior_products, train_products], axis=0)
+    order_id_list = orders['order_id'].drop_duplicates()
+    order_products = order_products[order_products['order_id'].isin(order_id_list)]
+    print 'order_products', order_products.shape
+
     products = pd.read_csv('../data/raw/products.csv')
 
     df = orders.merge(order_products, how='left', on='order_id')
+    print 'df', df.shape
     df = df.merge(products, how='left', on='product_id')
     df['days_since_prior_order'] = df['days_since_prior_order'].fillna(0).astype(int)
     null_cols = ['product_id', 'aisle_id', 'department_id', 'add_to_cart_order', 'reordered']
